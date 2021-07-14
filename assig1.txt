@@ -1,0 +1,103 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+int waitAtPlanet(int planet,int time, vector<vector<int>>&darkForce){
+
+    if(darkForce[planet].size()==0)
+    return 0;
+
+    if(darkForce[planet].back()<=time)
+    return 0;
+
+    int t = lower_bound(darkForce[planet].begin(),darkForce[planet].end(),time)-darkForce[planet].begin();
+
+    if(t==darkForce[planet].size())
+    {
+        return 0;
+    }
+    else if(darkForce[planet][t]!=time)
+    return 0;
+
+    else
+    {
+        int tmp = time+1;
+        for(int i=t;i<darkForce[planet].size();i++){
+            if(darkForce[planet][i]!=time)
+            return time-tmp;
+            else
+            time++;
+        }
+        return time-tmp;
+    }
+
+}
+int minTime(vector<vector<pair<int,int>>>& graph,vector<vector<int>>&darkForce,int n,int m){
+    
+    priority_queue<pair<int,int> ,vector<pair<int,int>> , greater<pair<int,int>>>pq;
+    
+    int start =0;
+    vector<int>minTimeAtPlanet(n+1,INT_MAX);
+    
+    pq.push({start,1}); // cost planet
+    minTimeAtPlanet[1]=start;
+    while(!pq.empty()){
+        auto tp = pq.top();
+        pq.pop();
+        int time = tp.first;
+        int curPlanet = tp.second;
+
+        if(curPlanet==n)
+            return time;
+        
+        int wait = waitAtPlanet(curPlanet,time,darkForce);
+
+        // cout<<" wait at Planet "<<curPlanet <<" for "<<wait<<" min \n";
+        
+        for(auto it:graph[curPlanet]){
+
+            int nextPlanet = it.first;
+
+            if(minTimeAtPlanet[curPlanet] + wait + it.second < minTimeAtPlanet[nextPlanet]){
+
+                minTimeAtPlanet[nextPlanet]=it.second + wait + minTimeAtPlanet[curPlanet];
+
+                // cout<<minTimeAtPlanet[nextPlanet]<<" \n";
+
+                pq.push({minTimeAtPlanet[nextPlanet],nextPlanet});
+            }
+            
+        }
+    }
+    return -1;
+    
+}
+
+int main(){
+
+    int n,m;
+    cin>>n>>m;
+    vector<vector<pair<int,int>>>graph(m+1);
+
+    for(int i=0;i<m;i++){
+        int u,v,t;
+        cin>>u>>v>>t;
+        graph[u].emplace_back(v,t);
+        graph[v].push_back({u,t});
+    }
+    vector<vector<int>>darkForce(n+1);
+
+    for(int i=1;i<=n;i++){
+        int k;
+        cin>>k;
+        vector<int>time;
+        for(int j=0;j<k;j++)
+        {
+            int t;
+            cin>>t;
+            time.push_back(t);
+        }
+        darkForce[i]=time;
+    }
+    cout<< minTime(graph,darkForce,n,m)<<"\n";
+
+}
